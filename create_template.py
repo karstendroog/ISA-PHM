@@ -1,4 +1,78 @@
-from dataclasses import dataclass
+"""
+This script generates ISA-PHM (Investigation/Study/Assay for Prognostics and
+Health Management) templates from a provided JSON file containing the
+necessary metadata. It leverages the isatools library to construct ISA-Tab or
+ISA-JSON representations of experimental investigations, studies, assays
+and associated metadata such as sensors, test setups, file details
+and fault/degradation protocols.
+
+Classes:
+    FileParameter: Represents a protocol parameter and its value for a file.
+    FileDetails: Holds information about a data file, including names,
+                 locations, parameters, and labels.
+    Sensor: Describes a sensor used in the experiment, including its type,
+            unit, and technical details.
+    TestSetUp: Contains details about the experimental setup, including
+               sensors and their characteristics.
+    AssayInfo: Holds information about an assay, including the sensor used and
+               file details.
+    StudyInfo: Aggregates all metadata for a study, including title, contacts,
+               setup, faults, and assays.
+    IsaPhmInfo: Top-level container for investigation metadata, including
+                studies, contacts, and publications.
+
+Functions:
+    create_info(filename) -> IsaPhmInfo:
+        Parses the input JSON file and returns an IsaPhmInfo object with all
+        relevant metadata.
+
+    create_study_descriptor(experiment_type):
+        Creates an ontology annotation for the study's experiment type.
+
+    add_test_setup(study: Study, study_info: StudyInfo):
+        Adds test setup sources and samples to the study based on provided
+        setup information.
+
+    create_assay_data(assay_info: AssayInfo, sample: Sample, study: Study,
+                      s_index: int, test_setup: TestSetUp):
+        Constructs assay data, including protocols, processes, and data files,
+        and links them to the sample.
+
+    create_fault_preparation_protocol(study: Study, study_info: StudyInfo):
+        Adds a fault/degradation preparation protocol and process to the study.
+
+    create_study_data(study_info: StudyInfo, index: int):
+        Assembles all study-level metadata, including samples, factors,
+        protocols, and assays.
+
+    create_isa_data(IsaPhmInfo: IsaPhmInfo):
+        Builds the full ISA investigation object from the IsaPhmInfo metadata.
+
+    main(args):
+        Entry point for the script. Parses arguments, loads metadata,
+        generates ISA structures, and writes output files.
+
+Usage:
+    Run the script with a JSON file containing investigation metadata:
+        python create_template.py [options] <input_file.json>
+
+    Options:
+        -t, --tab    Output ISA-Tab format (default: True)
+        -j, --json   Output ISA-JSON format (default: False)
+
+Dependencies:
+    - isatools
+    - argparse
+    - dataclasses
+    - typing
+
+Note:
+    The script expects the input JSON file to conform to the structure
+    required by the IsaPhmInfo class and its nested components.
+    If imported to another python file and an IsaPhmInfo object is made you can
+    use the function create_isa_data to create the investigation object.
+"""
+from dataclasses import dataclass, field
 from typing import List
 from isatools.model import *
 from isatools import isatab
@@ -13,7 +87,7 @@ class FileParameter:
 
 
 @dataclass
-class File_details:
+class FileDetails:
     """
     This class will hold the information of a file.
     """
@@ -21,9 +95,9 @@ class File_details:
     raw_file_location: str = ""
     proccesed_file_name: str = ""
     proccesed_file_location: str = ""
-    file_parameters: List[FileParameter] = None  # filter information
+    file_parameters: List[FileParameter] = field(default_factory=list)  # filter information
     number_of_columns: str = 0
-    labels: List[str] = None  # Column labels
+    labels: List[str] = field(default_factory=list)  # Column labels
     # Column 1 label [incl. unit] = "Sample nr. [-]""
     # Column 2 label [incl. unit] = "Filtered Vibration level [g]"
 
@@ -53,10 +127,10 @@ class Sensor:
 class TestSetUp:
     name: str = ""
     location: str = ""
-    characteristics: List[Characteristic] = None
+    characteristics: List[Characteristic] = field(default_factory=list)
     # Sensors and Measurements
     number_of_sensors: int = 0
-    sensors: List[Sensor] = None
+    sensors: List[Sensor] = field(default_factory=list)
 
 
 @dataclass
@@ -65,7 +139,7 @@ class AssayInfo:
     This class will hold the information of an assay.
     """
     used_sensor: Sensor
-    file_details: File_details
+    file_details: FileDetails
 
 
 @dataclass
@@ -77,7 +151,7 @@ class StudyInfo:
     detail_preparation: str = ""
     publication: Publication = None
     # STUDY CONTACTS
-    contacts: List[Person] = None
+    contacts: List[Person] = field(default_factory=list)
     experiment_type: str = ""  # Diagnostic, Degradation-constant, Degradation-time-varyingstant
     # Setup
     used_setup: TestSetUp = None
@@ -85,8 +159,8 @@ class StudyInfo:
     fault_type: str = ""  # Fault, Degradation
     fault_position: str = ""  # Position of the fault
     fault_severity: str = ""  # Severity of the fault, can be an integer or a string
-    operating_conditions: List[FactorValue] = None
-    assay_details: List[AssayInfo] = None
+    operating_conditions: List[FactorValue] = field(default_factory=list)
+    assay_details: List[AssayInfo] = field(default_factory=list)
 
 
 @dataclass
@@ -113,43 +187,62 @@ class IsaPhmInfo:
     # INVESTIGATION PUBLICATIONS
     publication: Publication = None
     # INVESTIGATION CONTACTS
-    contacts: List[Person] = None
+    contacts: List[Person] = field(default_factory=list)
     # INVESTIGATION STUDIES
-    study_details: List[StudyInfo] = None
+    study_details: List[StudyInfo] = field(default_factory=list)
 
 
 def create_info(filename) -> IsaPhmInfo:
+    """
+    Parses the input JSON file and returns an IsaPhmInfo object with all
+    relevant metadata.
+    """
+    # TODO: Implement JSON parsing logic
     pass
 
 
 def create_study_descriptor(experiment_type):
+    """
+    Creates an ontology annotation for the study's experiment type.
+    """
     annotation = OntologyAnnotation(term=experiment_type)
     return annotation
 
 
-def add_test_setup(study: Study, setup: TestSetUp, operating_conditions: List[FactorValue]):
-    source = Source(name=setup.name)
+def add_test_setup(study: Study, study_info: StudyInfo):
+    """
+    Adds test setup sources and samples to the study based on provided
+    setup information.
+    """
+    source = Source(name=study_info.used_setup.name)
     study.sources.append(source)
-    sample = Sample(name="Initialized experiment", derives_from=[source])
-    sample.characteristics = setup.characteristics
-    sample.factor_values.extend(operating_conditions)
-    study.samples = batch_create_materials(sample, n=1)
+    sample = Sample(
+        name=f"{study_info.fault_type}_{study_info.fault_position}_{study_info.fault_severity}",
+        derives_from=[source])
+    sample.characteristics = study_info.used_setup.characteristics
+    sample.factor_values.extend(study_info.operating_conditions)
+    study.samples = [sample]
     return sample
 
 
-def create_assay_data(assay_info: AssayInfo, sample: Sample, study: Study):
+def create_assay_data(assay_info: AssayInfo, sample: Sample, study: Study,
+                      s_index:int, test_setup: TestSetUp):
+    """
+    Constructs assay data, including protocols, processes, and data files,
+    and links them to the sample.
+    """
     assay = Assay()
     # Sensor Details
     sensor = assay_info.used_sensor
-    assay.measurement_type = sensor.measurement_type
-    assay.technology_type = sensor.technology_type
+    assay.filename = f"a_assay_st{s_index}_se{test_setup.sensors.index(sensor)}.txt"
+    assay.measurement_type = OntologyAnnotation(sensor.measurement_type)
+    assay.technology_type = OntologyAnnotation(sensor.technology_type)
     assay.technology_platform = sensor.technology_platform
-
-    SR = ProtocolParameter(parameter_name="sampling rate")
-    SL = ProtocolParameter(parameter_name="Sensor location")
-    SO = ProtocolParameter(parameter_name="Sensor orientation")
-    MU = ProtocolParameter(parameter_name="Measured unit")
-    DataAcquisition = ProtocolParameter(parameter_name="Data Acquisition Unit")
+    SR = ProtocolParameter(parameter_name=OntologyAnnotation("sampling rate"))
+    SL = ProtocolParameter(parameter_name=OntologyAnnotation("Sensor location"))
+    SO = ProtocolParameter(parameter_name=OntologyAnnotation("Sensor orientation"))
+    MU = ProtocolParameter(parameter_name=OntologyAnnotation("Measured unit"))
+    DataAcquisition = ProtocolParameter(parameter_name=OntologyAnnotation("Data Acquisition Unit"))
     SR_value = ParameterValue(category=SR, value=sensor.sampling_rate,
                               unit=OntologyAnnotation(sensor.sampeling_unit))
     SL_value = ParameterValue(
@@ -183,7 +276,7 @@ def create_assay_data(assay_info: AssayInfo, sample: Sample, study: Study):
     data_collection_process.outputs.append(datafile_raw)
     assay.process_sequence.append(data_collection_process)
 
-    if file_details.file_parameters is not None:
+    if file_details.file_parameters:
         data_transformation_protocol = Protocol(
             name="data transformation",
             protocol_type="data transformation",
@@ -193,7 +286,7 @@ def create_assay_data(assay_info: AssayInfo, sample: Sample, study: Study):
 
         data_transformation_process = Process(
             executes_protocol=data_transformation_protocol,
-            parameter_values=[file_parameter.parameter for
+            parameter_values=[file_parameter.value for
                               file_parameter in file_details.file_parameters])
         data_transformation_process.inputs.append(
             data_collection_process.outputs[0])
@@ -211,12 +304,32 @@ def create_assay_data(assay_info: AssayInfo, sample: Sample, study: Study):
 
 
 def create_fault_preparation_protocol(study: Study, study_info: StudyInfo):
+    """
+    Adds a fault/degradation preparation protocol and process to the study.
+    """
+
+    # Define ProtocolParameters for factors
+    FT_param = ProtocolParameter(parameter_name=OntologyAnnotation(term="Fault Type"))
+    FP_param = ProtocolParameter(parameter_name=OntologyAnnotation(term="Fault Position"))
+    FS_param = ProtocolParameter(parameter_name=OntologyAnnotation(term="Fault Severity"))
+
     experiment_preparation_protocol = Protocol(
         name=study_info.detail_preparation,
-        protocol_type=OntologyAnnotation(term="Fault/degradation protocol"))
+        protocol_type=OntologyAnnotation(term="Fault/degradation protocol"),
+        parameters=[FT_param, FP_param, FS_param]
+    )
+
     study.protocols.append(experiment_preparation_protocol)
+
+    # Define ParameterValues for the process
+    FT_value = ParameterValue(category=FT_param, value=study_info.fault_type)
+    FP_value = ParameterValue(category=FP_param, value=study_info.fault_position)
+    FS_value = ParameterValue(category=FS_param, value=study_info.fault_severity)
+
     experiment_preparation_process = Process(
-        executes_protocol=experiment_preparation_protocol)
+        executes_protocol=experiment_preparation_protocol,
+        parameter_values=[FT_value, FP_value, FS_value]
+    )
 
     for src in study.sources:
         experiment_preparation_process.inputs.append(src)
@@ -227,6 +340,10 @@ def create_fault_preparation_protocol(study: Study, study_info: StudyInfo):
 
 
 def create_study_data(study_info: StudyInfo, index: int):
+    """
+    Assembles all study-level metadata, including samples, factors,
+    protocols, and assays.
+    """
     study = Study(filename=f"s_study_s{index}.txt")
     study.title = study_info.title
     study.identifier = f"s{index}"
@@ -234,35 +351,29 @@ def create_study_data(study_info: StudyInfo, index: int):
     study.submission_date = study_info.submission_date
     study.public_release_date = study_info.public_release_date
     # STUDY PUBLICATIONS
-    study.publications.append(study_info.publication)
+    if study_info.publication:
+        study.publications.append(study_info.publication)
     # STUDY CONTACTS
     study.contacts = study_info.contacts
     # Experiment type
-    study.design_descriptors = create_study_descriptor(study_info.experiment_type)
+    study.design_descriptors.append(create_study_descriptor(study_info.experiment_type))
     # Study design
-    sample = add_test_setup(study, study_info.used_setup,
-                            study_info.operating_conditions)
-    # Fault / Degradation
-    FT = StudyFactor(name="Fault Type", factor_type="Qualitative Fault Specification")
-    FP = StudyFactor(name="Fault Position", factor_type="Qualitative Fault Specification")
-    FS = StudyFactor(name="Fault Severity", factor_type="Quantitative Fault Specification")
-    FT1 = FactorValue(factor_name=FT, value=study_info.fault_type)
-    FP1 = FactorValue(factor_name=FP, value=study_info.fault_position)
-    FS1 = FactorValue(factor_name=FS, value=study_info.fault_severity)
-    sample.factor_values.append(FT1)
-    sample.factor_values.append(FP1)
-    sample.factor_values.append(FS1)
+    sample = add_test_setup(study, study_info)
+
     # Protocol refrerence
     create_fault_preparation_protocol(study, study_info)
 
     for assay in study_info.assay_details:
-        assay_data = create_assay_data(assay, sample, study)
+        assay_data = create_assay_data(assay, sample, study, index, study_info.used_setup)
         study.assays.append(assay_data)
 
     return study
 
 
 def create_isa_data(IsaPhmInfo: IsaPhmInfo):
+    """
+    Builds the full ISA investigation object from the IsaPhmInfo metadata.
+    """
     investigation = Investigation()
     investigation.filename = "i_investigation.txt"
     investigation.identifier = IsaPhmInfo.identifier
@@ -271,7 +382,8 @@ def create_isa_data(IsaPhmInfo: IsaPhmInfo):
     investigation.submission_date = IsaPhmInfo.submission_date
     investigation.public_release_date = IsaPhmInfo.public_release_date
     # INVESTIGATION PUBLICATIONS
-    investigation.publications.append(IsaPhmInfo.publication)
+    if IsaPhmInfo.publication:
+        investigation.publications.append(IsaPhmInfo.publication)
     # INVESTIGATION CONTACTS
     investigation.contacts = IsaPhmInfo.contacts
     for i, study in enumerate(IsaPhmInfo.study_details):
@@ -281,6 +393,10 @@ def create_isa_data(IsaPhmInfo: IsaPhmInfo):
 
 
 def main(args):
+    """
+    Entry point for the script. Parses arguments, loads metadata,
+    generates ISA structures, and writes output files.
+    """
     info = create_info(args.file)
     inv_obj = create_isa_data(info)
     write_study_table_files(inv_obj, "")  # ,write_factor_values=False)
