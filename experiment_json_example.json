@@ -193,10 +193,6 @@
                                     "comments": []
                                 },
                                 "value": {
-                                    "category": {
-                                        "parameter_name": "Filter Type",
-                                        "comments": []
-                                    },
                                     "value": "Butterworth 2nd order 1-10.000Hz",
                                     "comments": []
                                 }
@@ -207,10 +203,6 @@
                                     "comments": []
                                 },
                                 "value": {
-                                    "category": {
-                                        "parameter_name": "Chunk Size",
-                                        "comments": []
-                                    },
                                     "value": "12",
                                     "unit": "s",
                                     "comments": []
@@ -222,10 +214,6 @@
                                     "comments": []
                                 },
                                 "value": {
-                                    "category": {
-                                        "parameter_name": "Scaling Range",
-                                        "comments": []
-                                    },
                                     "value": "[-1,1]",
                                     "comments": []
                                 }
@@ -236,10 +224,6 @@
                                     "comments": []
                                 },
                                 "value": {
-                                    "category": {
-                                        "parameter_name": "Scaling Resolution",
-                                        "comments": []
-                                    },
                                     "value": "24",
                                     "unit": "bit",
                                     "comments": []

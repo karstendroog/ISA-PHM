@@ -65,6 +65,7 @@ Dependencies:
     - argparse
     - dataclasses
     - typing
+    - json
 
 Note:
     The script expects the input JSON file to conform to the structure
@@ -78,6 +79,7 @@ from isatools.model import *
 from isatools import isatab
 from isatools.isatab.dump.write import *
 import argparse
+import json
 
 
 @dataclass
@@ -96,7 +98,7 @@ class FileDetails:
     proccesed_file_name: str = ""
     proccesed_file_location: str = ""
     file_parameters: List[FileParameter] = field(default_factory=list)  # filter information
-    number_of_columns: str = 0
+    number_of_columns: int = 0
     labels: List[str] = field(default_factory=list)  # Column labels
     # Column 1 label [incl. unit] = "Sample nr. [-]""
     # Column 2 label [incl. unit] = "Filtered Vibration level [g]"
@@ -192,13 +194,123 @@ class IsaPhmInfo:
     study_details: List[StudyInfo] = field(default_factory=list)
 
 
+def json_to_comment(data):
+    """
+    Converts a JSON comment object to an ISA comment object.
+    """
+    return Comment(**data)
+
+
+def json_to_person(data):
+    data["comments"] = [json_to_comment(c) for c in data.get("comments", [])]
+    data["roles"] = [OntologyAnnotation(term=r) for r in data.get("roles", [])]
+    return Person(**data)
+
+
+def json_to_publication(data):
+    data["comments"] = [json_to_comment(c) for c in data.get("comments", [])]
+    data["status"] = OntologyAnnotation(data.get("status", ""))
+    return Publication(**data)
+
+
+def json_to_characteristic(data):
+    data["comments"] = [json_to_comment(c) for c in data.get("comments", [])]
+    return Characteristic(**data)
+
+
+def json_to_file_parameter(data):
+    pdata = data["parameter"]
+    pdata["comments"] = [json_to_comment(c) for c in data.get("comments", [])]
+    vdata = data["value"]
+    vdata["comments"] = [json_to_comment(c) for c in data.get("comments", [])]
+    p = ProtocolParameter(**pdata)
+    if "unit" in vdata:
+        vdata["value"] = float(vdata["value"])
+        vdata["unit"] = OntologyAnnotation(vdata["unit"])
+    v = ParameterValue(**vdata, category=p)
+    return FileParameter(parameter=p, value=v)
+
+
+def json_to_file_details(data):
+    """
+    Converts a JSON object to a FileDetails object.
+    """
+    data["file_parameters"] = [json_to_file_parameter(fp) for fp in
+                               data.get("file_parameters")]
+    return FileDetails(**data)
+
+
+def json_to_sensor(data):
+    """
+    Converts a JSON object to a Sensor object.
+    """
+    return Sensor(**data)
+
+
+def json_to_assay_info(data):
+    """
+    Converts a JSON object to an AssayInfo object.
+    """
+    data["file_details"] = json_to_file_details(data.get("file_details", {}))
+    data["used_sensor"] = json_to_sensor(data.get("used_sensor", {}))
+    return AssayInfo(**data)
+
+
+def json_to_test_setup(data):
+    """
+    Converts a JSON object to a TestSetUp object.
+    """
+    data["characteristics"] = [json_to_characteristic(c) for c in data.get("characteristics", [])]
+    data["sensors"] = [json_to_sensor(s) for s in data.get("sensors", [])]
+    return TestSetUp(**data)
+
+
+def json_to_factor_value(data):
+    """
+    Converts a JSON object to a FactorValue object.
+    """
+    sf = StudyFactor(name=data["name"])
+    if "factor_type" in data:
+        sf.factor_type = OntologyAnnotation(data["factor_type"])
+    fv = FactorValue(factor_name=sf, value=data["value"])
+    if "unit" in data:
+        fv.unit = OntologyAnnotation(data["unit"])
+    return fv
+
+
+def json_to_study_info(data):
+    """
+    Converts a JSON object to a StudyInfo object.
+    """
+    data["publication"] = json_to_publication(data.get("publication", None))
+    data["contacts"] = [json_to_person(c) for c in data.get("contacts", [])]
+    data["used_setup"] = json_to_test_setup(data.get("used_setup", None))
+    data["operating_conditions"] = [json_to_factor_value(c) for c in
+                                    data.get("operating_conditions", [])]
+    data["assay_details"] = [json_to_assay_info(a) for a in
+                             data.get("assay_details", [])]
+    return StudyInfo(**data)
+
+
+def json_to_isa_phm_info(data):
+    """
+    Converts a JSON object to an IsaPhmInfo object.
+    """
+    data["publication"] = json_to_publication(data.get("publication", None))
+    data["contacts"] = [json_to_person(c) for c in data.get("contacts", [])]
+    data["study_details"] = [json_to_study_info(s) for s in data.get("study_details", [])]
+    return IsaPhmInfo(**data)
+
+
 def create_info(filename) -> IsaPhmInfo:
     """
     Parses the input JSON file and returns an IsaPhmInfo object with all
     relevant metadata.
     """
-    # TODO: Implement JSON parsing logic
-    pass
+    data = None
+    with open(filename, 'r') as file:
+        data = json.load(file)
+    return json_to_isa_phm_info(data)
 
 
 def create_study_descriptor(experiment_type):
@@ -243,7 +355,7 @@ def create_assay_data(assay_info: AssayInfo, sample: Sample, study: Study,
     SO = ProtocolParameter(parameter_name=OntologyAnnotation("Sensor orientation"))
     MU = ProtocolParameter(parameter_name=OntologyAnnotation("Measured unit"))
     DataAcquisition = ProtocolParameter(parameter_name=OntologyAnnotation("Data Acquisition Unit"))
-    SR_value = ParameterValue(category=SR, value=sensor.sampling_rate,
+    SR_value = ParameterValue(category=SR, value=float(sensor.sampling_rate),
                               unit=OntologyAnnotation(sensor.sampeling_unit))
     SL_value = ParameterValue(
         category=SL, value=sensor.sensor_location)
@@ -376,7 +488,7 @@ def create_study_data(study_info: StudyInfo, index: int):
         sample.factor_values.append(FT1)
         sample.factor_values.append(FP1)
         sample.factor_values.append(FS1)
-    
+
     f_type = "Fault" if study_info.experiment_type == "Diagnostic" else "Load"
     study.add_factor(name="Fault Type", factor_type=f_type)
     study.add_factor(name="Fault Position", factor_type=f_type)
@@ -425,7 +537,7 @@ def main(args):
     write_assay_table_files(
         inv_obj, "", write_factor_values=False
     )  # ,write_factor_values=False)
-    isatab.dump(inv_obj)
+    isatab.dump(inv_obj, ".")
 
 
 if __name__ == "__main__":

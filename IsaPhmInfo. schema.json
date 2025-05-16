@@ -114,7 +114,8 @@
                         "$ref": "#/definitions/Comment"
                     }
                 }
-            }
+            },
+            "required": ["title", "doi", "author_list", "status"]
         },
         "Person": {
             "type": "object",
@@ -344,7 +345,8 @@
                 "value": {
                     "$ref": "#/definitions/ParameterValue"
                 }
-            }
+            },
+            "required": ["parameter", "value"]
         },
         "ProtocolParameter": {
             "type": "object",
@@ -363,9 +365,6 @@
         "ParameterValue": {
             "type": "object",
             "properties": {
-            "category": {
-                "$ref": "#/definitions/ProtocolParameter"
-            },
             "value": {
                 "type": "string"
             },
