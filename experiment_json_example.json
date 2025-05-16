@@ -1,0 +1,259 @@
+{
+    "identifier": "i1",
+    "title": "Diagnostics on an E-motor-driven centrifugal pump set-up",
+    "description": "The complete set-up contains four centrifugal pumps, each driven by an induction motor. Two measurement methods, four motor speeds, and 11 fault types can be induced at various severity levels.",
+    "submission_date": "2023-10-26",
+    "public_release_date": "2023-12-17",
+    "publication": {
+        "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
+        "author_list": "S. Bruinsma;R. Geertsma;R. Loendersloot;T.Tinga",
+        "status": "published",
+        "comments": []
+    },
+    "contacts": [
+        {
+            "first_name": "Sietze",
+            "last_name": "Bruinsma",
+            "affiliation": "University of Twente;Royal Netherlands Navy",
+            "roles": [
+                "Corresponding Author"
+            ],
+            "comments": []
+        },
+        {
+            "first_name": "Rinze",
+            "last_name": "Geertsma",
+            "affiliation": "Netherlands Defence Academy",
+            "roles": [
+                "Author"
+            ],
+            "comments": []
+        },
+        {
+            "first_name": "Richard",
+            "last_name": "Loendersloot",
+            "affiliation": "University of Twente",
+            "roles": [
+                "Author"
+            ],
+            "comments": []
+        },
+        {
+            "first_name": "Tiedo",
+            "last_name": "Tinga",
+            "affiliation": "Netherlands Defence Academy;University of Twente",
+            "roles": [
+                "Author"
+            ],
+            "comments": []
+        }
+    ],
+    "study_details": [
+        {
+            "title": "Fault Severity 3 100%",
+            "description": "Fault Severity 3 at full speed",
+            "submission_date": "2023-10-26",
+            "public_release_date": "2023-12-17",
+            "detail_preparation": "Fault_introduction.pdf",
+            "publication": {
+                "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
+                "author_list": "S. Bruinsma;R. Geertsma;R. Loendersloot;T.Tinga",
+                "status": "published",
+                "comments": []
+            },
+            "contacts": [
+                {
+                    "first_name": "Sietze",
+                    "last_name": "Bruinsma",
+                    "affiliation": "University of Twente;Royal Netherlands Navy",
+                    "roles": [
+                        "Corresponding Author"
+                    ],
+                    "comments": []
+                },
+                {
+                    "first_name": "Rinze",
+                    "last_name": "Geertsma",
+                    "affiliation": "Netherlands Defence Academy",
+                    "roles": [
+                        "Author"
+                    ],
+                    "comments": []
+                },
+                {
+                    "first_name": "Richard",
+                    "last_name": "Loendersloot",
+                    "affiliation": "University of Twente",
+                    "roles": [
+                        "Author"
+                    ],
+                    "comments": []
+                },
+                {
+                    "first_name": "Tiedo",
+                    "last_name": "Tinga",
+                    "affiliation": "Netherlands Defence Academy;University of Twente",
+                    "roles": [
+                        "Author"
+                    ],
+                    "comments": []
+                }
+            ],
+            "experiment_type": "Diagnostic",
+            "used_setup": {
+                "name": "Techport",
+                "location": "",
+                "characteristics": [
+                    {
+                        "category": "Motor",
+                        "value": "MG160MA4042-H3"
+                    },
+                    {
+                        "category": "Motor Bearing",
+                        "value": "6309.C4"
+                    },
+                    {
+                        "category": "Pump",
+                        "value": "NK80-250/270 A2F2AE-SBQQE"
+                    },
+                    {
+                        "category": "Moter Speed Accuracy",
+                        "value": "5",
+                        "unit": "RPM"
+                    }
+                ],
+                "number_of_sensors": 1,
+                "sensors": [
+                    {
+                        "identifier": "s1",
+                        "measurement_type": "vibration",
+                        "measurement_unit": "g",
+                        "description": "data_collection.pdf",
+                        "technology_type": "accelerometer",
+                        "technology_platform": "Wilcoxon 786B-10",
+                        "data_acquisition_unit": "NI (USB-4432)",
+                        "sampling_rate": "2",
+                        "sampeling_unit": "kHz",
+                        "sensor_location": "Electric Motor non-driven end bearing",
+                        "location_unit": "",
+                        "sensor_orientation": "vertical",
+                        "orientation_unit": ""
+                    }
+                ]
+            },
+            "fault_type": "Fault",
+            "fault_position": "center",
+            "fault_severity": "3",
+            "operating_conditions": [
+                {
+                    "name": "Motor Speed",
+                    "factor_type": "Operating Condition",
+                    "value": "1480",
+                    "unit": "RPM"
+                },
+                {
+                    "name": "Discharge Pressure",
+                    "factor_type": "Operating Condition",
+                    "value": "1.4",
+                    "unit": "bar"
+                },
+                {
+                    "name": "Flow",
+                    "factor_type": "Operating Condition",
+                    "value": "140",
+                    "unit": "m^3/h"
+                }
+            ],
+            "assay_details": [
+                {
+                    "used_sensor": {
+                        "identifier": "s1",
+                        "measurement_type": "vibration",
+                        "measurement_unit": "g",
+                        "description": "data_collection.pdf",
+                        "technology_type": "accelerometer",
+                        "technology_platform": "Wilcoxon 786B-10",
+                        "data_acquisition_unit": "NI (USB-4432)",
+                        "sampling_rate": "2",
+                        "sampeling_unit": "kHz",
+                        "sensor_location": "Electric Motor non-driven end bearing",
+                        "location_unit": "",
+                        "sensor_orientation": "vertical",
+                        "orientation_unit": ""
+                    },
+                    "file_details": {
+                        "raw_file_name": "Vibration_Motor-2_100_time-bearing bpfo 3-ch1 Raw",
+                        "raw_file_location": ".",
+                        "proccesed_file_name": "Vibration_Motor-2_100_time-bearingbpfo 3-ch1",
+                        "proccesed_file_location": ".",
+                        "file_parameters": [
+                            {
+                                "parameter": {
+                                    "parameter_name": "Filter Type",
+                                    "comments": []
+                                },
+                                "value": {
+                                    "category": {
+                                        "parameter_name": "Filter Type",
+                                        "comments": []
+                                    },
+                                    "value": "Butterworth 2nd order 1-10.000Hz",
+                                    "comments": []
+                                }
+                            },
+                            {
+                                "parameter": {
+                                    "parameter_name": "Chunk Size",
+                                    "comments": []
+                                },
+                                "value": {
+                                    "category": {
+                                        "parameter_name": "Chunk Size",
+                                        "comments": []
+                                    },
+                                    "value": "12",
+                                    "unit": "s",
+                                    "comments": []
+                                }
+                            },
+                            {
+                                "parameter": {
+                                    "parameter_name": "Scaling Range",
+                                    "comments": []
+                                },
+                                "value": {
+                                    "category": {
+                                        "parameter_name": "Scaling Range",
+                                        "comments": []
+                                    },
+                                    "value": "[-1,1]",
+                                    "comments": []
+                                }
+                            },
+                            {
+                                "parameter": {
+                                    "parameter_name": "Scaling Resolution",
+                                    "comments": []
+                                },
+                                "value": {
+                                    "category": {
+                                        "parameter_name": "Scaling Resolution",
+                                        "comments": []
+                                    },
+                                    "value": "24",
+                                    "unit": "bit",
+                                    "comments": []
+                                }
+                            }
+                        ],
+                        "number_of_columns": 2,
+                        "labels": [
+                            "Sample nr. [-]",
+                            "Vibration [g]"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

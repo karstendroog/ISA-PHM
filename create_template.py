@@ -309,26 +309,31 @@ def create_fault_preparation_protocol(study: Study, study_info: StudyInfo):
     """
 
     # Define ProtocolParameters for factors
-    FT_param = ProtocolParameter(parameter_name=OntologyAnnotation(term="Fault Type"))
-    FP_param = ProtocolParameter(parameter_name=OntologyAnnotation(term="Fault Position"))
-    FS_param = ProtocolParameter(parameter_name=OntologyAnnotation(term="Fault Severity"))
+    f_params = []
+    f_params_val = []
+    if study_info.experiment_type == "Diagnostic":
+        FT_param = ProtocolParameter(parameter_name=OntologyAnnotation(term="Fault Type"))
+        FP_param = ProtocolParameter(parameter_name=OntologyAnnotation(term="Fault Position"))
+        FS_param = ProtocolParameter(parameter_name=OntologyAnnotation(term="Fault Severity"))
+        FT_value = ParameterValue(category=FT_param, value=study_info.fault_type)
+        FP_value = ParameterValue(category=FP_param, value=study_info.fault_position)
+        FS_value = ParameterValue(category=FS_param, value=study_info.fault_severity)
+        f_params = [FT_param, FP_param, FS_param]
+        f_params_val = [FT_value, FP_value, FS_value]
 
     experiment_preparation_protocol = Protocol(
         name=study_info.detail_preparation,
         protocol_type=OntologyAnnotation(term="Fault/degradation protocol"),
-        parameters=[FT_param, FP_param, FS_param]
+        parameters=f_params
     )
 
     study.protocols.append(experiment_preparation_protocol)
 
     # Define ParameterValues for the process
-    FT_value = ParameterValue(category=FT_param, value=study_info.fault_type)
-    FP_value = ParameterValue(category=FP_param, value=study_info.fault_position)
-    FS_value = ParameterValue(category=FS_param, value=study_info.fault_severity)
 
     experiment_preparation_process = Process(
         executes_protocol=experiment_preparation_protocol,
-        parameter_values=[FT_value, FP_value, FS_value]
+        parameter_values=f_params_val
     )
 
     for src in study.sources:
@@ -359,6 +364,23 @@ def create_study_data(study_info: StudyInfo, index: int):
     study.design_descriptors.append(create_study_descriptor(study_info.experiment_type))
     # Study design
     sample = add_test_setup(study, study_info)
+
+    # # Fault / Degradation
+    if study_info.experiment_type != "Diagnostic":
+        FT = StudyFactor(name="Fault Type", factor_type=study_info.experiment_type)
+        FP = StudyFactor(name="Fault Position", factor_type=study_info.experiment_type)
+        FS = StudyFactor(name="Fault Severity", factor_type=study_info.experiment_type)
+        FT1 = FactorValue(factor_name=FT, value=study_info.fault_type)
+        FP1 = FactorValue(factor_name=FP, value=study_info.fault_position)
+        FS1 = FactorValue(factor_name=FS, value=study_info.fault_severity)
+        sample.factor_values.append(FT1)
+        sample.factor_values.append(FP1)
+        sample.factor_values.append(FS1)
+    
+    f_type = "Fault" if study_info.experiment_type == "Diagnostic" else "Load"
+    study.add_factor(name="Fault Type", factor_type=f_type)
+    study.add_factor(name="Fault Position", factor_type=f_type)
+    study.add_factor(name="Fault Severity", factor_type=f_type)
 
     # Protocol refrerence
     create_fault_preparation_protocol(study, study_info)
