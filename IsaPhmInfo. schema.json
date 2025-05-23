@@ -209,16 +209,10 @@
                 "fault_severity": {
                     "type": "string"
                 },
-                "operating_conditions": {
+                "runs": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/StudyFactorValue"
-                    }
-                },
-                "assay_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AssayInfo"
+                        "$ref": "#/definitions/RunInfo"
                     }
                 }
             }
@@ -276,7 +270,7 @@
                 "sampling_rate": {
                     "type": "string"
                 },
-                "sampeling_unit": {
+                "sampling_unit": {
                     "type": "string"
                 },
                 "sensor_location": {
@@ -365,19 +359,33 @@
         "ParameterValue": {
             "type": "object",
             "properties": {
-            "value": {
-                "type": "string"
-            },
-            "unit": {
-                "type": "string"
-            },
-            "comments": {
-                "type": "array",
-                "items": {
-                "$ref": "#/definitions/Comment"
+                "value": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "comments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Comment"
+                    }
                 }
             }
-            }
+        },
+        "RunInfo": {
+            "type": "object",
+            "properties": {
+                "run_conditions": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/StudyFactorValue" }
+                },
+                "assay_details": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/AssayInfo" }
+                }
+            },
+            "required": ["run_conditions", "assay_details"]
         }
     }
 }
