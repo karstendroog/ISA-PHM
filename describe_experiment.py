@@ -163,7 +163,7 @@ def ask_for_characteristic():
     """
 
     category = input("What is the category of the characteristic?: ").strip()
-    value = input("What is the value of the characteristic?: ").strip()
+    value = input("What is the value/name of the characteristic?: ").strip()
     unit = input("What is the unit of the characteristic? " +
                  "(leave blank if none): ").strip()
 
@@ -197,7 +197,7 @@ def file_details():
 
     f_parameters = []
     if yes_no_question("Is the data of the sensor processed?"):
-        description = input("what is the description (filename ot text) how" +
+        description = input("what is the description (filename or text) how" +
                             " the data is processed?: ").strip()
         # Ask for associated data processing steps
 
@@ -253,12 +253,6 @@ def ask_for_sensor_details(index: int = 0, name: str = ""):
                                " of the sensor?: ").strip()
     orientation_unit = input("What is the orientation unit" +
                              " of the sensor?: ").strip()
-    comments = []
-    while yes_no_question("Do you want to add a comment" +
-                          " to the sensor?"):
-        name = input("What is the name of the comment?: ").strip()
-        value = input("What is the value of the comment?: ").strip()
-        comments.append({"name": name, "value": value})
 
     sensor = {
         "identifier": identifier,
@@ -271,7 +265,6 @@ def ask_for_sensor_details(index: int = 0, name: str = ""):
         "sampling_rate": sampling_rate,
         "sensor_location": sensor_location,
         "sensor_orientation": sensor_orientation,
-        "comments": comments
     }
 
     if sampling_unit != "":

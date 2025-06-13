@@ -80,7 +80,9 @@ from isatools import isatab
 from isatools.isatab.dump.write import *
 import argparse
 import json
+from isatools.isajson import ISAJSONEncoder
 
+TXT_ending = False
 
 @dataclass
 class FileParameter:
@@ -394,10 +396,14 @@ def create_assay_data(assay_info: AssayInfo, sample: Sample, study: Study,
     assay = Assay()
     # Sensor Details
     sensor = assay_info.used_sensor
+    try:
+        si = test_setup.sensors.index(sensor)
+    except ValueError:
+        si = -1
     assay.filename = (
-        f"a_assay_st{s_index}_se{test_setup.sensors.index(sensor)}_"
-        f"run{r_index}.txt"
-    )
+        f"a_assay_st{s_index}_se{si}_"
+        f"run{r_index}."
+    ) + ("txt" if TXT_ending else "json")
     assay.measurement_type = OntologyAnnotation(sensor.measurement_type)
     assay.technology_type = OntologyAnnotation(sensor.technology_type)
     assay.technology_platform = sensor.technology_platform
@@ -415,10 +421,13 @@ def create_assay_data(assay_info: AssayInfo, sample: Sample, study: Study,
     # Create parameter values, converting sampling_rate to float if possible
     try:
         sr_value = float(sensor.sampling_rate)
+        SR_value = ParameterValue(category=SR, value=sr_value,
+                                  unit=OntologyAnnotation(sensor.sampling_unit))
     except (ValueError, TypeError):
+        print(f"Warning: Invalid sampling rate '{sensor.sampling_rate}' " +
+              f"for sensor {sensor.identifier}. Using as string.")
         sr_value = sensor.sampling_rate
-    SR_value = ParameterValue(category=SR, value=sr_value,
-                              unit=OntologyAnnotation(sensor.sampling_unit))
+        SR_value = ParameterValue(category=SR, value=sr_value)
     SL_value = ParameterValue(category=SL, value=sensor.sensor_location)
     SO_value = ParameterValue(category=SO, value=sensor.sensor_orientation)
     MU_value = ParameterValue(category=MU, value=sensor.measurement_unit)
@@ -531,7 +540,8 @@ def create_study_data(study_info: StudyInfo, index: int):
     Assembles all study-level metadata, including samples, factors,
     protocols, and assays.
     """
-    study = Study(filename=f"s_study_s{index}.txt")
+    study = Study(filename=f"s_study_s{index}.")
+    study.filename += ("txt" if TXT_ending else "json")
     study.title = study_info.title
     study.identifier = f"s{index}"
     study.description = study_info.description
@@ -569,7 +579,8 @@ def create_isa_data(IsaPhmInfo: IsaPhmInfo):
     Builds the full ISA investigation object from the IsaPhmInfo metadata.
     """
     investigation = Investigation()
-    investigation.filename = "i_investigation.txt"
+    investigation.filename = "i_investigation." + \
+                             ("txt" if TXT_ending else "json")
     investigation.identifier = IsaPhmInfo.identifier
     investigation.title = IsaPhmInfo.title
     investigation.description = IsaPhmInfo.description
@@ -591,21 +602,40 @@ def main(args):
     Entry point for the script. Parses arguments, loads metadata,
     generates ISA structures, and writes output files.
     """
+    if args.tab:
+        global TXT_ending
+        TXT_ending = True
     info = create_info(args.file)
     inv_obj = create_isa_data(info)
-    write_study_table_files(inv_obj, "")
-    write_assay_table_files(inv_obj, "", write_factor_values=False)
-    isatab.dump(inv_obj, ".")
+
+    if args.tab:
+        write_study_table_files(inv_obj, "")
+        write_assay_table_files(inv_obj, "", write_factor_values=False)
+        isatab.dump(inv_obj, ".")
+    elif args.json:
+        with open(inv_obj.filename, "w") as f:
+            json.dump(inv_obj, f, cls=ISAJSONEncoder, sort_keys=True,
+                      indent=4, separators=(',', ': '))
+        for study in inv_obj.studies:
+            with open(study.filename, "w") as f:
+                json.dump(study, f, cls=ISAJSONEncoder, sort_keys=True,
+                          indent=4, separators=(',', ': '))
+
+            # Write each assay in the study as a separate JSON file
+            for assay in study.assays:
+                with open(assay.filename, "w") as f:
+                    json.dump(assay, f, cls=ISAJSONEncoder, sort_keys=True,
+                              indent=4, separators=(',', ': '))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--tab", action="store_true", default=True,
+    parser.add_argument("-t", "--tab", action="store_true", default=False,
                         help="when this is flag is enabled outputs isa-tab" +
-                        " format, default is True")
-    parser.add_argument("-j", "--json", action="store_true", default=False,
+                        " format, default is False")
+    parser.add_argument("-j", "--json", action="store_true", default=True,
                         help="when this is flag is enabled outputs" +
-                        " isa-json format, default is False")
+                        " isa-json format, default is True")
     parser.add_argument("file",
                         help="input a json file that contains the necessary" +
                         " information to create the isa-phm")
