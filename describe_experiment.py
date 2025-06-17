@@ -3,6 +3,7 @@ from copy import deepcopy
 from datetime import datetime
 import json
 
+# Global lists to store persons, publications, test setups, and sensor file details
 PERSONS = []
 PUBLICATIONS = []
 TEST_SETUPS = []
@@ -11,7 +12,8 @@ SENSOR_TO_FILE_DETAIL = {}
 
 def yes_no_question(to_ask):
     """
-    Ask a yes/no question via input() and return the answer.
+    Ask a yes/no question via input() and return the answer as True/False.
+    Keeps prompting until a valid answer is given.
     """
     while True:
         answer = input(to_ask + " (y/n): ").strip().lower()
@@ -25,7 +27,8 @@ def yes_no_question(to_ask):
 
 def get_date_question(to_ask):
     """
-    Ask a question about data and return the answer.
+    Prompt the user for a date in ISO8601 format and validate the input.
+    Keeps prompting until a valid date is entered.
     """
     while True:
         anwser = input(to_ask).strip().lower()
@@ -39,6 +42,10 @@ def get_date_question(to_ask):
 
 
 def ask_for_publication_details():
+    """
+    Prompt the user for publication details, including title, DOI, status, author list, and comments.
+    Returns a dictionary with the publication information.
+    """
     tiltle = input("what is the title of the publication?:")
     doi = ""
     while True:
@@ -61,6 +68,7 @@ def ask_for_publication_details():
     }
 
     temp = 'a'
+    # Allow adding multiple comments to the publication
     while yes_no_question(f"Do you want to add {temp} comment to " +
                           "the publication?"):
         name = input("what is the name of the comment?:")
@@ -78,7 +86,8 @@ def ask_for_publication_details():
 
 def ask_for_contact_details():
     """
-    Ask for contact details and return them as a dictionary.
+    Prompt the user for contact details, including name, email, phone, address, affiliation, roles, and comments.
+    Returns a dictionary with the contact information.
     """
     first_name = input("What is the contact's first name?: ").strip()
     last_name = input("What is the contact's last name?: ").strip()
@@ -90,6 +99,7 @@ def ask_for_contact_details():
     affiliation = input("What is the contact's affiliation?: ").strip()
 
     roles = []
+    # Allow adding multiple roles
     while True:
         role = input("Enter a role for the contact" +
                      " (leave blank to finish): ").strip()
@@ -99,6 +109,7 @@ def ask_for_contact_details():
             break
 
     comments = []
+    # Allow adding multiple comments
     while yes_no_question("Do you want to add a comment to the contact?"):
         name = input("What is the name of the comment?: ").strip()
         value = input("What is the value of the comment?: ").strip()
@@ -122,7 +133,8 @@ def ask_for_contact_details():
 
 def describe_investigation():
     """
-    Describe the investigation.
+    Collects and returns the details of the investigation, including identifier, title, description,
+    submission/public release dates, contacts, and optional publication.
     """
     i_identifier = "i-"+str(uuid.uuid4())
     i_title = input("what is the title of the investigation?:")
@@ -139,15 +151,18 @@ def describe_investigation():
                   "contacts": []
                   }
 
+    # Allow changing the auto-generated identifier
     if yes_no_question("The current indentifier is " + i_identifier +
                        " do you want to change it?"):
         i_identifier = input("what is the identifier of the investigation?:")
         IsaPhmInfo["identifier"] = i_identifier
 
+    # Optionally add a publication
     if yes_no_question("Do you want to add a publication?"):
         i_publication = ask_for_publication_details()
         IsaPhmInfo["publication"] = i_publication
 
+    # Allow adding multiple contacts
     temp = "a"
     while yes_no_question(f"Do you want to add {temp} contact?"):
         i_contact = ask_for_contact_details()
@@ -159,15 +174,16 @@ def describe_investigation():
 
 def ask_for_characteristic():
     """
-    Ask for characteristic details and return them as a dictionary.
+    Prompt the user for a characteristic's category, value, unit, and comments.
+    Returns a dictionary with the characteristic information.
     """
-
     category = input("What is the category of the characteristic?: ").strip()
     value = input("What is the value/name of the characteristic?: ").strip()
     unit = input("What is the unit of the characteristic? " +
                  "(leave blank if none): ").strip()
 
     comments = []
+    # Allow adding multiple comments
     while yes_no_question("Do you want to add a comment" +
                           " to the characteristic?"):
         name = input("What is the name of the comment?: ").strip()
@@ -183,6 +199,11 @@ def ask_for_characteristic():
 
 
 def file_details():
+    """
+    Prompt the user for file details related to a sensor, including number of columns, labels,
+    and optionally data processing steps.
+    Returns a dictionary with the file details.
+    """
     while True:
         try:
             num_columns = int(input("How many columns does the sensor" +
@@ -196,8 +217,9 @@ def file_details():
         labels.append(label)
 
     f_parameters = []
+    # Optionally add data processing steps
     if yes_no_question("Is the data of the sensor processed?"):
-        description = input("what is the description (filename or text) how" +
+        description = input("what is the description how" +
                             " the data is processed?: ").strip()
         # Ask for associated data processing steps
 
@@ -230,7 +252,10 @@ def file_details():
 
 def ask_for_sensor_details(index: int = 0, name: str = ""):
     """
-    Ask for sensor details and return them as a dictionary.
+    Prompt the user for sensor details, including measurement type, unit, description,
+    technology, sampling, location, and orientation.
+    Also collects file details for the sensor.
+    Returns a dictionary with the sensor information.
     """
     identifier = f"Sensor_{index}_{name}"
     measurement_type = input("What is the measurement " +
@@ -267,6 +292,7 @@ def ask_for_sensor_details(index: int = 0, name: str = ""):
         "sensor_orientation": sensor_orientation,
     }
 
+    # Add optional units if provided
     if sampling_unit != "":
         sensor["sampling_unit"] = sampling_unit
     elif location_unit != "":
@@ -274,17 +300,23 @@ def ask_for_sensor_details(index: int = 0, name: str = ""):
     elif orientation_unit != "":
         sensor["orientation_unit"] = orientation_unit
 
+    # Store file details for this sensor
     SENSOR_TO_FILE_DETAIL[identifier] = file_details()
 
     return sensor
 
 
 def describe_test_setup():
+    """
+    Prompt the user for test setup details, including name, location, characteristics, and sensors.
+    Appends the setup to the TEST_SETUPS list.
+    """
     name = input("What is the name of the test setup?: ").strip()
     location = input("What is the location of the test setup?: ").strip()
 
     characteristics = []
     temp = "a"
+    # Allow adding multiple characteristics
     while yes_no_question(f"Do you want to add {temp}" +
                           " characteristic to the test setup?"):
         temp = "another"
@@ -294,6 +326,7 @@ def describe_test_setup():
     sensors = []
     temp = "a"
     index = 0
+    # Allow adding multiple sensors
     while yes_no_question(f"Do you want to add {temp} sensor?"):
         temp = "another"
         sensor = ask_for_sensor_details(index, name)
@@ -311,7 +344,8 @@ def describe_test_setup():
 
 def get_contacts_for_experiment():
     """
-    Get contacts for the experiment.
+    Display the list of contacts and allow the user to confirm or add more.
+    Returns the list of contacts for the experiment.
     """
     print("is this the list of the contacts for the experiment?")
     for i, contact in enumerate(PERSONS):
@@ -325,6 +359,10 @@ def get_contacts_for_experiment():
 
 
 def get_test_setup_for_experiment():
+    """
+    Allow the user to select a test setup from the available setups.
+    Returns the selected test setup.
+    """
     used_setup = None
     if len(TEST_SETUPS) == 1:
         used_setup = TEST_SETUPS[0]
@@ -348,6 +386,10 @@ def get_test_setup_for_experiment():
 
 
 def get_experiment_type():
+    """
+    Prompt the user to select the experiment type from a predefined list.
+    Returns the selected experiment type.
+    """
     print("Select the experiment type:")
     experiment_types = {"Diagnostic": "Diagnostic",
                         "Constant degradation": "Degradation-c",
@@ -369,38 +411,38 @@ def get_experiment_type():
 
 
 def get_fault_info():
-    fault_type = ""
-    fault_type_input = ""
-    while True:
-        fault_type_input = input("What is the fault type?" +
-                                 " (Fault/Degradation): ").strip().lower()
-        if fault_type_input in ["fault", "degradation"]:
-            break
-        else:
-            print("Please enter 'Fault' or 'Degradation'.")
-    fault_type = "Fault" if fault_type_input == "fault" else "Degradation"
+    """
+    Prompt the user for fault type, position, and severity.
+    Returns a tuple with the fault information.
+    """
+    fault_type = input("What is the fault type?: ").strip().lower()
     fault_position = input("What is the fault position?: ").strip()
     fault_severity = input("What is the fault severity?: ").strip()
     return fault_type, fault_position, fault_severity
 
 
 def ask_for_operating_condition():
+    """
+    Prompt the user for an operating condition's name, value, and unit.
+    Returns a dictionary with the operating condition information.
+    """
     name = input("What is the name of the operating" +
                  " condition (indepent variable)?: ").strip()
-    factor_type = input("What is the factor type " +
-                        " (e.g., load, fault)?: ").strip()
     value = input("What is the value of the operating condition?: ").strip()
     unit = input("What is the unit of the operating condition" +
                  " (leave blank if none)?: ").strip()
     return {
         "name": name,
-        "factor_type": factor_type,
         "value": value,
         "unit": unit
     }
 
 
 def ask_for_run(setup, operating_conditions):
+    """
+    Prompt the user for run details, including file details for each sensor in the setup.
+    Returns a dictionary with the run conditions and assay details.
+    """
     run_conditions = operating_conditions
     assay_details = []
     for i, sensor in enumerate(setup["sensors"]):
@@ -434,6 +476,11 @@ def ask_for_run(setup, operating_conditions):
 
 
 def describe_experiment():
+    """
+    Collects and returns the details of an experiment, including title, description, dates,
+    preparation, contacts, experiment type, fault info, operating conditions, and runs.
+    Optionally adds a publication.
+    """
     if len(TEST_SETUPS) == 0:
         print("No test setup has been added yet.")
         return
@@ -454,12 +501,14 @@ def describe_experiment():
     fault_type, fault_position, fault_severity = get_fault_info()
     operating_conditions = []
     temp = "an"
+    # Allow adding multiple operating conditions
     while yes_no_question(f"Do you want to add {temp}" +
                           " operating condition to the test setup?"):
         temp = "another"
         operating_conditions.append(ask_for_operating_condition())
     temp = "a"
     runs = []
+    # Allow adding multiple runs
     while yes_no_question(f"Do you want to add {temp} run?"):
         temp = "another"
         runs.append(ask_for_run(used_setup, operating_conditions))
@@ -484,6 +533,7 @@ def describe_experiment():
     return StudyInfo
 
 
+# Main script execution
 print("### INVESTIGATON DETAILS ###\n")
 isa_phm_info = describe_investigation()
 print("\n### TEST SETUP DETAILS ###\n")
@@ -497,6 +547,7 @@ while yes_no_question("Do you want to add another experiment?"):
     study_objects.append(describe_experiment())
 print("### DONE ###")
 
+# Add study details to the investigation info and save to JSON
 isa_phm_info["study_details"] = study_objects
 
 with open("experiment.json", "w") as f:

@@ -69,9 +69,6 @@
                 "name": {
                     "type": "string"
                 },
-                "factor_type": {
-                    "type": "string"
-                },
                 "value": {
                     "type": "string"
                 },
@@ -197,11 +194,7 @@
                     "$ref": "#/definitions/TestSetUp"
                 },
                 "fault_type": {
-                    "type": "string",
-                    "enum": [
-                        "Fault",
-                        "Degradation"
-                    ]
+                    "type": "string"
                 },
                 "fault_position": {
                     "type": "string"
